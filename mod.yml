@@ -1,0 +1,4 @@
+name: 8ball
+version: 0.3
+role: plugin
+main: ./8ball

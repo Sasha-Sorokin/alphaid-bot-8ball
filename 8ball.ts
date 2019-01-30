@@ -1,13 +1,14 @@
-import * as MessagesFlows from "@cogs/cores/messagesFlows";
 import * as Random from "random-js";
 import * as getLogger from "loggy";
 import * as utils from "@utils/utils";
 import * as i18n from "@utils/ez-i18n";
-import { IModule } from "@sb-types/ModuleLoader/Interfaces";
-import { Plugin } from "@cogs/plugin";
-import { Message, GuildMember } from "discord.js";
+import { IModule } from "@sb-types/ModuleLoader/Interfaces.new";
 import { command } from "@utils/help";
 import { IHashMap } from "@sb-types/Types";
+import { ErrorMessages } from "@sb-types/Consts";
+import { Message, GuildMember } from "discord.js";
+import { ModulePrivateInterface } from "@sb-types/ModuleLoader/PrivateInterface";
+import { MessagesFlows, IPublicFlowCommand, IMessageFlowContext } from "@cogs/cores/messagesFlows/messagesFlows";
 
 const ICONS = {
 	THINKING: "https://i.imgur.com/hIuSpIl.png",
@@ -58,51 +59,37 @@ const CATEGORIES = Object.keys(RESPONSES);
 		description: "loc:8BALL_META_DEFAULT_ARG0_DESC"
 	}
 })
-class Ball8 extends Plugin implements IModule {
-	public get signature() {
-		return "snowball.features.8ball";
-	}
-
+class Ball8 implements IModule<Ball8> {
 	private readonly _log = getLogger("8Ball");
-	private _flowHandler: MessagesFlows.IPublicFlowCommand;
+	private _flowHandler: IPublicFlowCommand;
 	private _i18nRemove: i18n.ExtensionAssignUnhandleFunction;
 
-	constructor() {
-		super({}, true);
-		this._log("ok", "8Ball is loading...");
-	}
-
-	public async init() {
-		if (!$modLoader.isPendingInitialization(this.signature)) {
-			throw new Error("This module is not pending initialization");
+	public async init(i: ModulePrivateInterface<Ball8>) {
+		if (!i.baseCheck(this) && i.isPendingInitialization()) {
+			throw new Error(ErrorMessages.NOT_PENDING_INITIALIZATION);
 		}
 
-		const messagesFlowsKeeper = $snowball.modLoader.findKeeper<MessagesFlows.MessagesFlows>(
-			"snowball.core_features.messageflows"
-		);
+		const messagesFlowsInterface = i.getDependency<MessagesFlows>("messagesflows");
 
-		if (!messagesFlowsKeeper) {
+		if (!messagesFlowsInterface) {
 			throw new Error("`MessageFlows` not found!");
 		}
 
-		this._i18nRemove = await i18n.extendAndAssign(
-			[ __dirname, "i18n" ],
-			this.signature
-		);
+		this._i18nRemove = await i18n.extendAndAssign([ __dirname, "i18n" ], i);
 
-		messagesFlowsKeeper.onInit((flowsMan: MessagesFlows.default) => {
+		messagesFlowsInterface.onInit((flowsMan) => {
 			return this._flowHandler = flowsMan.watchForCommands(
-				(ctx) => this.onMessage(ctx),
+				(ctx) => this._onMessage(ctx),
 				"8ball"
 			);
 		});
 	}
 
-	private async onMessage(ctx: MessagesFlows.IMessageFlowContext) {
+	private async _onMessage(ctx: IMessageFlowContext) {
 		const msg = ctx.message;
 
 		const i18nTarget = await utils.getMessageMemberOrAuthor(msg);
-		if (!i18nTarget) { return; }
+		if (!i18nTarget) return;
 
 		const actualUser = i18nTarget instanceof GuildMember ? i18nTarget.user : i18nTarget;
 
@@ -122,7 +109,8 @@ class Ball8 extends Plugin implements IModule {
 				})
 			});
 		} catch (err) {
-			this._log("err", "Damn! 8Ball can't send message", err);
+			this._log("err", "Damn! 8Ball unable to send message", err);
+
 			$snowball.captureException(err, {
 				extra: { channelId: msg.channel.id }
 			});
@@ -162,28 +150,23 @@ class Ball8 extends Plugin implements IModule {
 				await message.delete();
 			} catch (err) {
 				this._log("err", "Message also cannot be removed...", err);
+
 				$snowball.captureException(err, { extra: { id: message.id } });
 			}
 		}
 	}
 
-	public async unload() {
-		if (!$modLoader.isPendingUnload(this.signature)) {
-			throw new Error("This module is not pending unload");
+	public async unload(i: ModulePrivateInterface<Ball8>) {
+		if (i.baseCheck(this) && !i.isPendingUnload()) {
+			throw new Error(ErrorMessages.NOT_PENDING_UNLOAD);
 		}
 
-		if (this._flowHandler) {
-			this._flowHandler.unhandle();
-		}
+		if (this._flowHandler) this._flowHandler.unhandle();
 
-		if (this._i18nRemove) {
-			this._i18nRemove();
-		}
-
-		this.unhandleEvents();
+		if (this._i18nRemove) this._i18nRemove();
 
 		return true;
 	}
 }
 
-module.exports = Ball8;
+export default Ball8;
