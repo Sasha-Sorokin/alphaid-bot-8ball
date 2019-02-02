@@ -69,7 +69,7 @@ class Ball8 implements IModule<Ball8> {
 			throw new Error(ErrorMessages.NOT_PENDING_INITIALIZATION);
 		}
 
-		const messagesFlowsInterface = i.getDependency<MessagesFlows>("messagesflows");
+		const messagesFlowsInterface = i.getDependency<MessagesFlows>("messages-flows");
 
 		if (!messagesFlowsInterface) {
 			throw new Error("`MessageFlows` not found!");
