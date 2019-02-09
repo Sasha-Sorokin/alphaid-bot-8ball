@@ -1,5 +1,5 @@
 name: 8ball
-version: 1.0.3
+version: 1.0.4
 dependencies:
   messages-flows: ^0.9.0
 main: ./8ball
