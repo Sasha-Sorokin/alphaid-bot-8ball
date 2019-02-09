@@ -3,7 +3,6 @@ import * as getLogger from "loggy";
 import * as utils from "@utils/utils";
 import * as i18n from "@utils/ez-i18n";
 import { IModule } from "@sb-types/ModuleLoader/Interfaces.new";
-import { command } from "@utils/help";
 import { IHashMap } from "@sb-types/Types";
 import { ErrorMessages } from "@sb-types/Consts";
 import { Message, GuildMember } from "discord.js";
@@ -53,12 +52,12 @@ const RESPONSES: IHashMap<I8BallResponsesCategory> = {
 
 const CATEGORIES = Object.keys(RESPONSES);
 
-@command("FUN", "8ball", "loc:8BALL_META_DEFAULT", {
-	"loc:8BALL_META_DEFAULT_ARG0": {
-		optional: false,
-		description: "loc:8BALL_META_DEFAULT_ARG0_DESC"
-	}
-})
+// @command("FUN", "8ball", "loc:8BALL_META_DEFAULT", {
+// 	"loc:8BALL_META_DEFAULT_ARG0": {
+// 		optional: false,
+// 		description: "loc:8BALL_META_DEFAULT_ARG0_DESC"
+// 	}
+// })
 class Ball8 implements IModule<Ball8> {
 	private readonly _log = getLogger("8Ball");
 	private _flowHandler: IPublicFlowCommand;
